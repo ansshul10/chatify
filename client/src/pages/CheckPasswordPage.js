@@ -4,7 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import Avatar from '../components/Avatar';
 import { useDispatch } from 'react-redux';
-import { setToken } from '../redux/userSlice';
+import { setToken, setUser } from '../redux/userSlice';
 
 const CheckPasswordPage = () => {
   const [data, setData] = useState({ password: "" });
@@ -12,15 +12,15 @@ const CheckPasswordPage = () => {
   const location = useLocation();
   const dispatch = useDispatch();
 
+  // Ensure userId is available
   useEffect(() => {
-    if (!location?.state?.name) {
+    if (!location?.state?._id) {
       navigate('/email');
     }
   }, [location, navigate]);
 
   const handleOnChange = (e) => {
-    const { name, value } = e.target;
-    setData((prev) => ({ ...prev, [name]: value }));
+    setData({ ...data, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -28,21 +28,29 @@ const CheckPasswordPage = () => {
     const URL = `${process.env.REACT_APP_BACKEND_URL}/api/password`;
 
     try {
-      const response = await axios.post(URL, { 
-        userId: location?.state?._id, 
-        password: data.password 
-      }, { withCredentials: true });
-
-      toast.success(response.data.message);
+      const response = await axios.post(
+        URL,
+        { userId: location?.state?._id, password: data.password },
+        { withCredentials: true }
+      );
 
       if (response.data.success) {
+        toast.success(response.data.message);
+
+        // Store token in Redux & localStorage
         dispatch(setToken(response?.data?.token));
         localStorage.setItem('token', response?.data?.token);
+
+        // Fetch user details
+        const userResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/user-details`, { withCredentials: true });
+
+        dispatch(setUser(userResponse.data.data)); // Save user details in Redux
+
         setData({ password: "" });
         navigate('/');
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      toast.error(error?.response?.data?.message || "Something went wrong!");
     }
   };
 
@@ -103,7 +111,6 @@ const CheckPasswordPage = () => {
       </div>
     </div>
   );
-  
 };
 
 export default CheckPasswordPage;
