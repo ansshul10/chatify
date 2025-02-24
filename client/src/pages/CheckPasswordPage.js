@@ -1,58 +1,72 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
+import { IoClose } from "react-icons/io5";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import uploadFile from '../helpers/uploadFile';
+import axios from 'axios'
 import toast from 'react-hot-toast';
+import { PiUserCircle } from "react-icons/pi";
 import Avatar from '../components/Avatar';
 import { useDispatch } from 'react-redux';
 import { setToken, setUser } from '../redux/userSlice';
 
 const CheckPasswordPage = () => {
-  const [data, setData] = useState({ password: "" });
-  const navigate = useNavigate();
-  const location = useLocation();
-  const dispatch = useDispatch();
+  const [data,setData] = useState({
+    password : "",
+    userId : ""
+  })
+  const navigate = useNavigate()
+  const location = useLocation()
+  const dispatch = useDispatch()
 
-  // Ensure userId is available
-  useEffect(() => {
-    if (!location?.state?._id) {
-      navigate('/email');
+  useEffect(()=>{
+    if(!location?.state?.name){
+      navigate('/email')
     }
-  }, [location, navigate]);
+  },[])
 
-  const handleOnChange = (e) => {
-    setData({ ...data, [e.target.name]: e.target.value });
-  };
+  const handleOnChange = (e)=>{
+    const { name, value} = e.target
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/password`;
+    setData((preve)=>{
+      return{
+          ...preve,
+          [name] : value
+      }
+    })
+  }
+
+  const handleSubmit = async(e)=>{
+    e.preventDefault()
+    e.stopPropagation()
+
+    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/password`
 
     try {
-      const response = await axios.post(
-        URL,
-        { userId: location?.state?._id, password: data.password },
-        { withCredentials: true }
-      );
+        const response = await axios({
+          method :'post',
+          url : URL,
+          data : {
+            userId : location?.state?._id,
+            password : data.password
+          },
+          withCredentials : true
+        })
 
-      if (response.data.success) {
-        toast.success(response.data.message);
+        toast.success(response.data.message)
 
-        // Store token in Redux & localStorage
-        dispatch(setToken(response?.data?.token));
-        localStorage.setItem('token', response?.data?.token);
+        if(response.data.success){
+            dispatch(setToken(response?.data?.token))
+            localStorage.setItem('token',response?.data?.token)
 
-        // Fetch user details
-        const userResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/user-details`, { withCredentials: true });
-
-        dispatch(setUser(userResponse.data.data)); // Save user details in Redux
-
-        setData({ password: "" });
-        navigate('/');
-      }
+            setData({
+              password : "",
+            })
+            navigate('/')
+        }
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Something went wrong!");
+        toast.error(error?.response?.data?.message)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 p-4">
