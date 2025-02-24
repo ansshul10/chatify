@@ -1,68 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
+import { IoClose } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom';
 import uploadFile from '../helpers/uploadFile';
-import axios from 'axios';
+import axios from 'axios'
 import toast from 'react-hot-toast';
 
-const DEFAULT_PROFILE_IMAGE = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-
 const RegisterPage = () => {
-  const [data, setData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    profile_pic: DEFAULT_PROFILE_IMAGE,
-  });
+  const [data,setData] = useState({
+    name : "",
+    email : "",
+    password : "",
+    profile_pic : ""
+  })
+  const [uploadPhoto,setUploadPhoto] = useState("")
+  const navigate = useNavigate()
 
-  const [uploadPhoto, setUploadPhoto] = useState(null);
-  const navigate = useNavigate();
+  const handleOnChange = (e)=>{
+    const { name, value} = e.target
 
-  const handleOnChange = (e) => {
-    const { name, value } = e.target;
-    setData((prev) => ({ ...prev, [name]: value }));
-  };
+    setData((preve)=>{
+      return{
+          ...preve,
+          [name] : value
+      }
+    })
+  }
 
-  const handleUploadPhoto = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const uploadedPhoto = await uploadFile(file);
-    setUploadPhoto(file);
+  const handleUploadPhoto = async(e)=>{
+    const file = e.target.files[0]
 
-    setData((prev) => ({
-      ...prev,
-      profile_pic: uploadedPhoto?.url || DEFAULT_PROFILE_IMAGE,
-    }));
-  };
+    const uploadPhoto = await uploadFile(file)
 
-  const handleClearUploadPhoto = (e) => {
-    e.preventDefault();
-    setUploadPhoto(null);
-    setData((prev) => ({ ...prev, profile_pic: DEFAULT_PROFILE_IMAGE }));
-  };
+    setUploadPhoto(file)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    setData((preve)=>{
+      return{
+        ...preve,
+        profile_pic : uploadPhoto?.url
+      }
+    })
+  }
+  const handleClearUploadPhoto = (e)=>{
+    e.stopPropagation()
+    e.preventDefault()
+    setUploadPhoto(null)
+  }
 
-    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/register`;
+  const handleSubmit = async(e)=>{
+    e.preventDefault()
+    e.stopPropagation()
+
+    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/register`
 
     try {
-      const response = await axios.post(URL, data);
-      toast.success(response.data.message);
+        const response = await axios.post(URL,data)
+        console.log("response",response)
 
-      if (response.data.success) {
-        setData({
-          name: '',
-          email: '',
-          password: '',
-          profile_pic: DEFAULT_PROFILE_IMAGE,
-        });
-        navigate('/email');
-      }
+        toast.success(response.data.message)
+
+        if(response.data.success){
+            setData({
+              name : "",
+              email : "",
+              password : "",
+              profile_pic : ""
+            })
+
+            navigate('/email')
+
+        }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+        toast.error(error?.response?.data?.message)
     }
-  };
+    console.log('data',data)
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 p-4">
