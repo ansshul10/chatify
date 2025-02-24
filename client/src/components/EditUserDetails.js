@@ -1,87 +1,68 @@
-import React, { useEffect, useRef, useState } from 'react'
-import Avatar from './Avatar'
-import uploadFile from '../helpers/uploadFile'
-import Divider from './Divider'
-import axios from 'axios'
-import taost from 'react-hot-toast'
-import { useDispatch } from 'react-redux'
-import { setUser } from '../redux/userSlice'
+import React, { useEffect, useRef, useState } from 'react';
+import Avatar from './Avatar';
+import uploadFile from '../helpers/uploadFile';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../redux/userSlice';
 
+const EditUserDetails = ({ onClose, user }) => {
+  const [data, setData] = useState({
+    name: user?.name || '',
+    profile_pic: user?.profile_pic || ''
+  });
+  const uploadPhotoRef = useRef();
+  const dispatch = useDispatch();
 
-const EditUserDetails = ({onClose,user}) => {
-    const [data,setData] = useState({
-        
-        name : user?.user,
-        profile_pic : user?.profile_pic
-    })
-    const uploadPhotoRef = useRef()
-    const dispatch = useDispatch()
+  useEffect(() => {
+    setData((prev) => ({ ...prev, ...user }));
+  }, [user]);
 
-    useEffect(()=>{
-        setData((preve)=>{
-            return{
-                ...preve,
-                ...user
-            }
-        })
-    },[user])
+  const handleOnChange = (e) => {
+    const { name, value } = e.target;
+    setData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    const handleOnChange = (e)=>{
-        const { name, value } = e.target
+  const handleOpenUploadPhoto = (e) => {
+    e.preventDefault();
+    uploadPhotoRef.current.click();
+  };
 
-        setData((preve)=>{
-            return{
-                ...preve,
-                [name] : value
-            }
-        })
+  const handleUploadPhoto = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload a valid image file!');
+      return;
     }
 
-    const handleOpenUploadPhoto = (e)=>{
-        e.preventDefault()
-        e.stopPropagation()
-
-        uploadPhotoRef.current.click()
+    try {
+      const uploadPhoto = await uploadFile(file);
+      setData((prev) => ({ ...prev, profile_pic: uploadPhoto?.url }));
+      toast.success('Profile picture updated!');
+    } catch (error) {
+      toast.error('Failed to upload image. Try again.');
     }
-    const handleUploadPhoto = async(e)=>{
-        const file = e.target.files[0]
+  };
 
-        const uploadPhoto = await uploadFile(file)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const URL = `${process.env.REACT_APP_BACKEND_URL}/api/update-user`;
 
-        setData((preve)=>{
-        return{
-            ...preve,
-            profile_pic : uploadPhoto?.url
-        }
-        })
+      const response = await axios.post(URL, data, { withCredentials: true });
+
+      toast.success(response?.data?.message);
+
+      if (response.data.success) {
+        dispatch(setUser(response.data.data));
+        onClose();
+      }
+    } catch (error) {
+      toast.error('Error updating profile, please try again.');
     }
-
-    const handleSubmit = async(e)=>{
-        e.preventDefault()
-        e.stopPropagation()
-        try {
-            const URL = `${process.env.REACT_APP_BACKEND_URL}/api/update-user`
-
-            const response = await axios({
-                method : 'post',
-                url : URL,
-                data : data,
-                withCredentials : true
-            })
-
-            console.log('response',response)
-            taost.success(response?.data?.message)
-            
-            if(response.data.success){
-                dispatch(setUser(response.data.data))
-                onClose()
-            }
-         
-        } catch (error) {
-            console.log(error)
-            taost.error()
-        }
-    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-md transition-all duration-300">
