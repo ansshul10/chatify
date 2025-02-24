@@ -1,9 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link, useParams } from 'react-router-dom'
+import Avatar from './Avatar'
 import { HiDotsVertical } from "react-icons/hi";
 import { FaAngleLeft } from "react-icons/fa6";
+import { FaPlus } from "react-icons/fa6";
+import { FaImage } from "react-icons/fa6";
+import { FaVideo } from "react-icons/fa6";
 import uploadFile from '../helpers/uploadFile';
+import { IoClose } from "react-icons/io5";
+import Loading from './Loading';
+import backgroundImage from '../assets/wallapaper.jpeg'
 import { IoMdSend } from "react-icons/io";
 import moment from 'moment'
 
@@ -11,34 +18,34 @@ const MessagePage = () => {
   const params = useParams()
   const socketConnection = useSelector(state => state?.user?.socketConnection)
   const user = useSelector(state => state?.user)
-  const [dataUser, setDataUser] = useState({
-    name: "",
-    email: "",
-    profile_pic: "",
-    online: false,
-    _id: ""
+  const [dataUser,setDataUser] = useState({
+    name : "",
+    email : "",
+    profile_pic : "",
+    online : false,
+    _id : ""
   })
-  const [openImageVideoUpload, setOpenImageVideoUpload] = useState(false)
-  const [message, setMessage] = useState({
-    text: "",
-    imageUrl: "",
-    videoUrl: ""
+  const [openImageVideoUpload,setOpenImageVideoUpload] = useState(false)
+  const [message,setMessage] = useState({
+    text : "",
+    imageUrl : "",
+    videoUrl : ""
   })
-  const [loading, setLoading] = useState(false)
-  const [allMessage, setAllMessage] = useState([])
+  const [loading,setLoading] = useState(false)
+  const [allMessage,setAllMessage] = useState([])
   const currentMessage = useRef(null)
 
-  useEffect(() => {
-    if (currentMessage.current) {
-      currentMessage.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
-    }
-  }, [allMessage])
+  useEffect(()=>{
+      if(currentMessage.current){
+          currentMessage.current.scrollIntoView({behavior : 'smooth', block : 'end'})
+      }
+  },[allMessage])
 
-  const handleUploadImageVideoOpen = () => {
+  const handleUploadImageVideoOpen = ()=>{
     setOpenImageVideoUpload(preve => !preve)
   }
 
-  const handleUploadImage = async (e) => {
+  const handleUploadImage = async(e)=>{
     const file = e.target.files[0]
 
     setLoading(true)
@@ -47,22 +54,22 @@ const MessagePage = () => {
     setOpenImageVideoUpload(false)
 
     setMessage(preve => {
-      return {
+      return{
         ...preve,
-        imageUrl: uploadPhoto.url
+        imageUrl : uploadPhoto.url
       }
     })
   }
-  const handleClearUploadImage = () => {
+  const handleClearUploadImage = ()=>{
     setMessage(preve => {
-      return {
+      return{
         ...preve,
-        imageUrl: ""
+        imageUrl : ""
       }
     })
   }
 
-  const handleUploadVideo = async (e) => {
+  const handleUploadVideo = async(e)=>{
     const file = e.target.files[0]
 
     setLoading(true)
@@ -71,73 +78,72 @@ const MessagePage = () => {
     setOpenImageVideoUpload(false)
 
     setMessage(preve => {
-      return {
+      return{
         ...preve,
-        videoUrl: uploadPhoto.url
+        videoUrl : uploadPhoto.url
       }
     })
   }
-  const handleClearUploadVideo = () => {
+  const handleClearUploadVideo = ()=>{
     setMessage(preve => {
-      return {
+      return{
         ...preve,
-        videoUrl: ""
+        videoUrl : ""
       }
     })
   }
 
-  useEffect(() => {
-    if (socketConnection) {
-      socketConnection.emit('message-page', params.userId)
+  useEffect(()=>{
+      if(socketConnection){
+        socketConnection.emit('message-page',params.userId)
 
-      socketConnection.emit('seen', params.userId)
+        socketConnection.emit('seen',params.userId)
 
-      socketConnection.on('message-user', (data) => {
-        setDataUser(data)
-      })
+        socketConnection.on('message-user',(data)=>{
+          setDataUser(data)
+        }) 
+        
+        socketConnection.on('message',(data)=>{
+          console.log('message data',data)
+          setAllMessage(data)
+        })
 
-      socketConnection.on('message', (data) => {
-        console.log('message data', data)
-        setAllMessage(data)
-      })
 
+      }
+  },[socketConnection,params?.userId,user])
 
-    }
-  }, [socketConnection, params?.userId, user])
-
-  const handleOnChange = (e) => {
-    const { name, value } = e.target
+  const handleOnChange = (e)=>{
+    const { name, value} = e.target
 
     setMessage(preve => {
-      return {
+      return{
         ...preve,
-        text: value
+        text : value
       }
     })
   }
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = (e)=>{
     e.preventDefault()
 
-    if (message.text || message.imageUrl || message.videoUrl) {
-      if (socketConnection) {
-        socketConnection.emit('new message', {
-          sender: user?._id,
-          receiver: params.userId,
-          text: message.text,
-          imageUrl: message.imageUrl,
-          videoUrl: message.videoUrl,
-          msgByUserId: user?._id
+    if(message.text || message.imageUrl || message.videoUrl){
+      if(socketConnection){
+        socketConnection.emit('new message',{
+          sender : user?._id,
+          receiver : params.userId,
+          text : message.text,
+          imageUrl : message.imageUrl,
+          videoUrl : message.videoUrl,
+          msgByUserId : user?._id
         })
         setMessage({
-          text: "",
-          imageUrl: "",
-          videoUrl: ""
+          text : "",
+          imageUrl : "",
+          videoUrl : ""
         })
       }
     }
   }
-
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#FFFFFF] flex flex-col">
