@@ -1,45 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
+import { IoClose } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import uploadFile from '../helpers/uploadFile';
+import axios from 'axios'
 import toast from 'react-hot-toast';
-import { PiUserCircle } from 'react-icons/pi';
+import { PiUserCircle } from "react-icons/pi";
 
 const CheckEmailPage = () => {
-  const [data, setData] = useState({
-    email: '',
-  });
+  const [data,setData] = useState({
+    email : "",
+  })
+  const navigate = useNavigate()
 
-  const navigate = useNavigate();
+  const handleOnChange = (e)=>{
+    const { name, value} = e.target
 
-  const handleOnChange = (e) => {
-    const { name, value } = e.target;
-    setData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+    setData((preve)=>{
+      return{
+          ...preve,
+          [name] : value
+      }
+    })
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleSubmit = async(e)=>{
+    e.preventDefault()
+    e.stopPropagation()
 
-    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/email`;
+    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/email`
 
     try {
-      const response = await axios.post(URL, data);
-      toast.success(response.data.message);
+        const response = await axios.post(URL,data)
 
-      if (response.data.success) {
-        setData({ email: '' });
-        navigate('/password', {
-          state: response?.data?.data,
-        });
-      }
+        toast.success(response.data.message)
+
+        if(response.data.success){
+            setData({
+              email : "",
+            })
+            navigate('/password',{
+              state : response?.data?.data
+            })
+        }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+        toast.error(error?.response?.data?.message)
     }
-  };
-
+  }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 p-4">
       <div className="w-full max-w-3xl flex flex-col md:flex-row items-center justify-between bg-gray-800/40 backdrop-blur-lg border border-gray-600/40 rounded-2xl shadow-lg p-6">
